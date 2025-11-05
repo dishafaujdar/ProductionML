@@ -38,7 +38,7 @@ class MyLinearRegression():
     
     return X_train,y_train
 
-  def Visuals(self,X_train,y_train,plot_types = 'boxplot'):
+  def Visuals(self,y_train,plot_types = 'boxplot'):
     if plot_types == 'boxplot':
       sns.boxplot(data = y_train)
       plt.title(f'{self.dataset_name} - Target Distribution (Boxplot)')
@@ -56,20 +56,20 @@ class MyLinearRegression():
       plt.ylabel('Target Variable')
       plt.show()
 
-  def fit(self,X_train,y_train,use_ridge = False, lambda_=None, method = 'auto'):
+  def fit(self,X_train,y_train,use_ridge = False, lambda_ = None, method = 'auto'):
     if method == "auto":
       method = 'normal_eq' if X_train.shape[0] < 20000 else 'gradient_descent'
 
     if method == 'normal_eq':
-      self.weights = self._normal_equation(X_train, y_train, use_ridge, self.lambda_)
+      self.weights = self._normal_equation(X_train, y_train, use_ridge, lambda_)
     elif method == 'gradient_descent':
-        self.weights = self._gradient_descent(X_train, y_train, use_ridge, self.lambda_)
+        self.weights = self._gradient_descent(X_train, y_train, use_ridge, lambda_)
     else:
         raise ValueError(f"Unknown method: {method}")
     
     return self
 
-  def _normal_equation(self, X, y, use_ridge, lambda_):
+  def _normal_equation(self, X, y, use_ridge = False, lambda_ = None):
 
     X_with_bias = np.column_stack([np.ones((X.shape[0])), X])
 
@@ -84,7 +84,7 @@ class MyLinearRegression():
     elif XTy.ndim == 0:
         XTy = np.array([XTy])
 
-    if (use_ridge):
+    if (use_ridge == True):
         XTX += lambda_ * np.eye(X_with_bias.shape[1])
         XTX[0,0] -= lambda_
     else:
@@ -96,14 +96,14 @@ class MyLinearRegression():
     print(f"Weights shape: {w.shape}")
     return w
 
-  def _gradient_descent(self, X, y, use_ridge, lambda_):
+  def _gradient_descent(self, X, y, use_ridge = False, lambda_ = None):
     X_with_bias = np.column_stack([np.ones((X.shape[0])), X])
     self.weights = np.zeros(X_with_bias.shape[1])
     
     for epoch in range(self.epochs):
       y_pred = X_with_bias @ self.weights
       error = y_pred - y
-      if use_ridge:
+      if use_ridge == True:
         gradient = X_with_bias.T @ error / X_with_bias.shape[0] + (lambda_ / X_with_bias.shape[0]) * self.weights
         gradient[1:] += (lambda_ / X_with_bias.shape[0]) * self.weights[1:]  # Regularize only non-bias weights
       else:
